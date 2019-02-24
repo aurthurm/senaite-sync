@@ -1,0 +1,9 @@
+.DS_STORE
+#db.sqlite3
+datadump.json
+os
+sys
+**/migrations
+__pycache__/
+*.py[cod]
+*$py.class
