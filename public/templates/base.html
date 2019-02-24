@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block titke %}{% endblock %} | STANCHION LIMS</title>
+    {% block meta %}{% endblock %}    
+    <script src="{% static 'vendor/MDB-PRO-4.6.1/js/jquery-3.3.1.min.js' %}"></script>
+    {% block head_scripts %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'vendor/MDB-PRO-4.6.1/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/MDB-PRO-4.6.1/css/addons/datatables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/MDB-PRO-4.6.1/css/mdb.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.min.css' %}">
+    {% block styles %}{% endblock %}
+</head>
+<body class="site">
+    <header>
+        <!--Navbar -->
+        {% if not user.is_authenticated %}
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top scrolling-navbar top-nav-collapse">
+        {% else %}
+        <nav class="navbar navbar-expand-lg navbar-dark indigo fixed-top scrolling-navbar top-nav-collapse">
+        {% endif %}
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'home' %}">STANCHION</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent-555"
+                aria-controls="navbarSupportedContent-555" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent-555">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sync:senaite' %}">Sync Senaite</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto nav-flex-icons">
+                    <li class="nav-item">
+                        <a class="btn btn-outline-warning btn-sm ml-2">
+                            <i class="fa fa-user"></i>
+                            welcome @{{user.username}}
+                        </a>
+                    </li>
+                </ul>
+                </div>
+            </div>
+        </nav>
+        <!--/.Navbar -->        
+        {% block base-header %}
+        {% endblock %}
+    </header>
+    <main class="site-content">
+        {% block main %}{% endblock %}
+    </main>
+    <footer class="navbar-dark bg-dark">
+        {% block footer %}{% endblock %}
+    </footer>
+    <script src="{% static 'vendor/MDB-PRO-4.6.1/js/popper.min.js' %}"></script>
+    <script src="{% static 'vendor/MDB-PRO-4.6.1/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'vendor/MDB-PRO-4.6.1/js/mdb.min.js' %}"></script>
+    <script src="{% static 'vendor/MDB-PRO-4.6.1/js/addons/datatables.min.js' %}"></script>
+    <script src="{% static 'js/d3.v5.min.js' %}"></script>
+    <script src="{% static 'js/dimple.v2.3.0.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

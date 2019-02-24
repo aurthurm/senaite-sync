@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block titke %}Dashboard{% endblock %} 
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'vendor/trumbowyg/ui/trumbowyg.min.css' %}">
+{% endblock %}
+
+{% block main %}
+<div class="page-spacer-p">
+    <div class="container-fluid">
+
+        <ul class="nav md-pills nav-justified pills-pink">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#search" role="tab">SEARCH</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#statistics" role="tab">STATISTICS</a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <div class="tab-content pt-0">
+            <div class="tab-pane fade in show active" id="search" role="tabpanel">
+                <br>      
+                {% include './search.html' %}      
+            </div>
+            <div class="tab-pane fade" id="statistics" role="tabpanel">
+                <br>
+                <!--Blue select-->
+                {% include './statistics.html' %}   
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/statistics.js' %}"></script>
+    <script src="{% static 'vendor/trumbowyg/trumbowyg.min.js' %}"></script>
+    <script src="{% static 'vendor/jQuery-File-Upload-9.28.0/js/vendor/jquery.ui.widget.js' %}"></script>
+    <script src="{% static 'vendor/jQuery-File-Upload-9.28.0/js/jquery.iframe-transport.js' %}"></script>
+    <script src="{% static 'vendor/jQuery-File-Upload-9.28.0/js/jquery.fileupload.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+            // Data Picker Initialization
+            $('.datepicker').pickadate({
+                selectMonths: true, 
+                selectYears: 50, 
+                formatSubmit: 'yyyy/mm/dd',
+                hiddenPrefix: 'prefix__',
+                hiddenSuffix: '__suffix',
+                min: [2016,0,1],
+                max: [2030,11,31]
+            });
+
+
+            $('.dataTables_length').addClass('bs-select');
+            $('.mdb-select').materialSelect();
+
+            var delayTimer;
+            var input;
+
+            // Submit Search Query
+            $('input').on('keyup', function(e){   
+                clearTimeout(delayTimer);                                  
+                input = $(this);  
+
+                delayTimer = setTimeout(function() {
+                var data = {};      
+                data['target'] = 
+                data['q'] = input.val();
+                console.log("Request sent: ... .... Awaiting response ... ...");      
+
+                $('#tradesTable').DataTable({
+                    "destroy": true,
+                    "searching": true,
+                    "paging": true,       
+                    "ajax": {
+                        "url": '{% url "search" %}',
+                        "type": 'GET',
+                        "dataSrc": "result",
+                        "data": function ( d ) {
+                            d.target = input.attr('data-target');
+                            d.q = input.val();
+                        }
+                    },
+                    "columns": [
+                        { "data": "name" },
+                        { "data": "gender" },
+                        { "data": "dob" },
+                        { "data": "cpid" },
+                        { "data": "facility" },
+                        { "data": "province" },
+                        { "data": "district" },
+                        { "data": "sid" },
+                        { "data": "result" },
+                        { "data": "state" },
+                        { "data": "keyword" },
+                        { "data": "received" },
+                        { "data": "captured" },
+                    ]
+                });
+
+                }, 3000);         
+            });
+
+            // Submit Data Download Query
+            $('a#get-data').on('click', function(e){
+                e.preventDefault();
+                $('#get-data-error').html();
+                console.log("Getting data ......");
+                var start,
+                    end,
+                    state,
+                    data = {};
+
+                data["start"] = $('input#date-picker-from').val();
+                data["end"] = $('input#date-picker-to').val();
+                data["state"] = $('select#state').val();
+                
+                $.ajax({
+                    "url": "{% url 'get-data' %}",
+                    "method": "GET",
+                    "data": data,
+                    success: function(res){
+                        console.log("Done Getting data!");
+                        $('#get-data-error').html(res.error);
+                        var items = res.result;
+                        const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values here
+                        const header = Object.keys(items[0]);
+                        let csv = items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
+                        csv.unshift(header.join(','));
+                        csv = csv.join('\r\n');
+
+                        //Download the file as CSV
+                        var downloadLink = document.createElement("a");
+                        var blob = new Blob(["\ufeff", csv]);
+                        var url = URL.createObjectURL(blob);
+                        downloadLink.href = url;
+                        downloadLink.download = "QueryData.csv";
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    }
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

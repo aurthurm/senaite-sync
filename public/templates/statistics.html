@@ -1,0 +1,36 @@
+ <div class="row">
+
+	<div class="col-12">
+		 <h6>Download CSV Data From Period A to period B</h6>
+	</div>
+ 	<div class="col-3"> 
+		<div class="md-form">
+			<input placeholder="Selected start date" type="text" id="date-picker-from" class="form-control datepicker">
+			<label for="date-picker-from">Date From</label>
+		</div>	
+ 	</div>
+ 	<div class="col-3">  
+		<div class="md-form">
+			<input placeholder="Selected end date" type="text" id="date-picker-to" class="form-control datepicker">
+			<label for="date-picker-to">Date To:</label>
+		</div>		
+ 	</div>
+ 	<div class="col-3">
+        <div class="md-form ">
+            <select id="state" class="mdb-select md-form" searchable="Search here..">
+                <option value="" disabled selected>Review State</option>
+                <option value="verified">VERIFIED</option>
+                <option value="Published">PUBLISHED</option>
+                <option value="all">PUBLISHED & VERIFIED</option>
+            </select>
+        </div>
+ 	</div>
+ 	<div class="col-3">
+		<a id="get-data" class="btn btn-outline-orange">GET DATA</a>
+ 	</div>
+ 	<div class="col-12">
+ 		<div id="get-data-error" class="text-danger"></div>
+ 	</div>
+ </div>
+ <div class="row">
+ </div>

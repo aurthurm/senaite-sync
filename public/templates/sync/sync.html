@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titke %}SYNC{% endblock %} 
+
+{% block main %}
+	<div class="page-spacer-p">
+		<div class="container">			
+			<div class="row">
+				<div class="col-12 d-flex justify-content-center">
+					<button id="syncButton" class="btn btn-md btn-outline-blue mr-5">SYNC SENAITE-DATA TO STANCHION</button>
+					<div class="preloader-wrapper">
+					  <div class="spinner-layer spinner-red-only">
+					    <div class="circle-clipper left">
+					      <div class="circle"></div>
+					    </div>
+					    <div class="gap-patch">
+					      <div class="circle"></div>
+					    </div>
+					    <div class="circle-clipper right">
+					      <div class="circle"></div>
+					    </div>
+					  </div>
+					</div>
+				</div>
+				<div id="exception-errors" class="col-12 bg-danger d-none p-2"></div>
+				<div class="col-12 clients">
+					<br><hr>
+					<h5>Clients Sync Progress: <span class="text-tiny observable"></span></h5>
+					<h6 class="text-muted">Last Synced: <span>{{ progress.client_synced | timesince }}</span></h6>
+					<div class="progress md-progress">
+					    <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+					    </div>
+					</div>
+				</div>
+				<div class="col-12 patients">
+					<hr>
+					<h5>Patients Sync Proress: <span class="text-tiny observable"></span></h5>
+					<h6 class="text-muted">Last Synced: <span>{{ progress.patient_synced | timesince }}</span></h6>
+					<div class="progress md-progress">
+					    <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+					    </div>
+					</div>
+				</div>
+				<div class="col-12 analysis">
+					<hr>
+					<h5>Analysis Sync Progress: <span class="text-tiny observable"></span></h5>
+					<h6 class="text-muted">Last Synced: <span>{{ progress.analysis_synced | timesince }}</span></h6>
+					<div class="progress md-progress">
+					    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+					    </div>
+					</div>
+				</div>
+				<div class="col-12">
+					<p class="text-danger text-center mt-2"><b>DO NOT CLOSE THIS WINDOW WHILST SYNC IS IN PROGRESS</b></p>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function () {
+
+	var syncMessage = null,
+		interval = null;
+
+	$('button#syncButton').on("click", function(e){
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		$(this).addClass("disabled");
+		$(".preloader-wrapper").addClass("active");
+		$("#exception-errors").addClass("d-none").html("");
+		startSync()
+		getProgress()
+	});
+
+	function getProgress()
+	{
+		interval = setInterval(function() 
+	    {
+
+			$.ajax({
+				"url": "{% url 'sync:progress' %}",
+				"method": "GET",
+				"data": {},
+				success: function(res){
+					var progress = res.progress;
+					// Client Updates
+					$('.clients').find('span.observable').html(progress.clients_percent);
+					$('.clients').find('div.progress-bar').css({'width': progress.clients_percent});
+					// Patient Updates
+					$('.patients').find('span.observable').html(progress.patients_percent);
+					$('.patients').find('div.progress-bar').css({'width': progress.patients_percent});
+					// Analysis Updates
+					$('.analysis').find('span.observable').html(progress.analyses_percent);
+					$('.analysis').find('div.progress-bar').css({'width': progress.analyses_percent});
+					// Overal Progress and Processing Updates
+				}
+			})
+	    }, 10000);
+	 }
+
+	function startSync()
+	{
+		$.ajax({
+			"url": "{% url 'sync:senaite' %}",
+			"method": "POST",
+			"data": {
+				"action": "sync"
+			},
+			success: function(res){
+				syncMessage = res.message;
+				if(syncMessage !== null){
+					clearInterval(interval)
+				}
+				$('button#syncButton').removeClass("disabled");
+				$(".preloader-wrapper").removeClass("active");
+				$("#exception-errors").removeClass("d-none").html(res.error);
+			}
+		})		
+	}
+
+
+
+});
+</script>
+{% endblock %}
