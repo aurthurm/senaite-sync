@@ -64,6 +64,9 @@ class SearchView(View):
 						"result":item.result,
 						"state":item.state,
 						"keyword":item.keyword,
+						"creator":item.creator,
+						"sampled":str(item.date_sampled)[:10],
+						"created":str(item.date_created)[:10],
 						"received":str(item.date_received)[:10],
 						"captured":str(item.date_captured)[:10],
 					})
@@ -86,6 +89,9 @@ class SearchView(View):
 					"result":item.result,
 					"state":item.state,
 					"keyword":item.keyword,
+					"creator":item.creator,
+					"sampled":str(item.date_sampled)[:10],
+					"created":str(item.date_created)[:10],
 					"received":str(item.date_received)[:10],
 					"captured":str(item.date_captured)[:10],
 				})
@@ -103,6 +109,7 @@ class StatsQueyView(View):
 
 		if not start or not end or not state:
 			data["error"] = "Please select a start date,  end date and review"
+			data["result"] = None
 			return JsonResponse(data)
 		else:
 			start = dateutil.parser.parse(start, ignoretz=False)
@@ -130,6 +137,9 @@ class StatsQueyView(View):
 					"result":item.result,
 					"state":item.state,
 					"keyword":item.keyword,
+					"creator":item.creator,
+					"sampled":str(item.date_sampled)[:10],
+					"created":str(item.date_created)[:10],
 					"received":str(item.date_received)[:10],
 					"captured":str(item.date_captured)[:10],
 				})

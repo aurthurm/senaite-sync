@@ -1,11 +1,11 @@
 from django.db import models
 
-VERIFIED = "Verified"
-PUBLISHED = "Published"
+VERIFIED = "verified"
+PUBLISHED = "published"
 ALL = "All"
 CATEGORIES = (
-	(VERIFIED, 'Verified'),
-	(PUBLISHED, 'Published'),
+	(VERIFIED, 'verified'),
+	(PUBLISHED, 'published'),
 	(ALL, 'All')
 	)
 

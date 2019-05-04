@@ -26,6 +26,15 @@ def progress_reset():
 	progress.analysis_total = 1
 	progress.save()
 
+def progress_analysis_reset():
+	#Reset progress before sync
+	progress = SyncProgress.objects.first()
+
+	progress.analysis_done = False
+	progress.analysis_count = 0
+	progress.analysis_total = 1
+	progress.save()
+
 def progress_update(page_nr, portal_type, done):
 	page_nr += 1
 	progress = SyncProgress.objects.first()
@@ -126,81 +135,104 @@ def csv_to_stanchion_db(csv, portal_type):
 		        facility = None
 
 		    if facility != None:
-		        Patient.objects.get_or_create(
-		            name=row[1]["Firstname"],
-		            surname=row[1]["Surname"],
-		            gender=row[1]["Gender"],
-		            dob=dateutil.parser.parse(row[1]["BirthDate"], ignoretz=True),
-		            cpid=row[1]["ClientPatientID"],
-		            puid=row[1]["UID"],
-		            pruid=row[1]["PrimaryReferrerUID"],
-		            anonymous=False,
-		            facility=facility
-		        )                
-		    else:
-		    	# say something about the error     
+		    	try:		    		
+			        Patient.objects.get_or_create(
+			            name=row[1]["Firstname"],
+			            surname=row[1]["Surname"],
+			            gender=row[1]["Gender"],
+			            dob=dateutil.parser.parse(row[1]["BirthDate"], ignoretz=True),
+			            cpid=row[1]["ClientPatientID"],
+			            puid=row[1]["UID"],
+			            pruid=row[1]["PrimaryReferrerUID"],
+			            anonymous=False,
+			            facility=facility
+			        )  
+		    	except Exception:
+		    		# unique puid violation exception
+			    	pass            
+		    else:   
 		    	pass     
 
 	if portal_type == "analysis":
 		for row in csv.iterrows():
 
-		    pruid=row[1]["Patient_uid"]
-		    try:
-		        patient = Patient.objects.get(puid__exact=pruid)
-		    except Patient.DoesNotExist:
-		        patient = None
+			pruid=row[1]["Patient_uid"]
+			try:
+			    patient = Patient.objects.get(puid__exact=pruid)
+			except Patient.DoesNotExist:
+			    patient = None
 
-		    if patient != None:
-		        state = row[1]["Analyses_0_review_state"]
-		        if state == 'verified':
-		            sate = VERIFIED
-		        else:
-		            state = PUBLISHED
+			if patient != None:
+				state = row[1]["Analyses_0_review_state"]
+				if state == 'verified':
+				    sate = VERIFIED
+				else:
+				    state = PUBLISHED
 
-		        keyword = row[1]["Analyses_0_Keyword"]
-		        if keyword == "HI2CAP96":
-		            keyword = ROCHE
-		        else:
-		            keyword = ABBOT
+				keyword = row[1]["Analyses_0_Keyword"]
+				if keyword == "HI2CAP96":
+				    keyword = ROCHE
+				else:
+				    keyword = ABBOT
 
-		        # self.stdout.write(self.style.SUCCESS(f'Added {pruid} Anayses Resquests'))
+				# self.stdout.write(self.style.SUCCESS(f'Added {pruid} Anayses Resquests'))
 
-		        try:
-		            date_sampled = dateutil.parser.parse(row[1]["DateSampled"], ignoretz=False)
-		        except TypeError:
-		            date_sampled = None
+				try:
+				    date_sampled = dateutil.parser.parse(row[1]["DateSampled"], ignoretz=False)
+				except TypeError:
+				    date_sampled = None
 
-		        try:
-		            date_received = dateutil.parser.parse(row[1]["DateReceived"], ignoretz=False)
-		        except TypeError:
-		            date_received = None
+				try:
+				    date_received = dateutil.parser.parse(row[1]["DateReceived"], ignoretz=False)
+				except TypeError:
+				    date_received = None
 
-		        try:
-		            date_created = dateutil.parser.parse(row[1]["creation_date"], ignoretz=False)
-		        except TypeError:
-		            date_created = None
+				try:
+				    date_created = dateutil.parser.parse(row[1]["creation_date"], ignoretz=False)
+				except TypeError:
+				    date_created = None
 
-		        try:
-		            date_captured = dateutil.parser.parse(row[1]["Analyses_0_ResultCaptureDate"], ignoretz=False)
-		        except TypeError:
-		            date_captured = None
+				try:
+				    date_captured = dateutil.parser.parse(row[1]["Analyses_0_ResultCaptureDate"], ignoretz=False)
+				except TypeError:
+				    date_captured = None
 
-		        Analyses.objects.get_or_create(
-		            patient=patient,
-		            sid=row[1]["getSampleID"],
-		            pruid=row[1]["Patient_uid"],
-		            result=row[1]["Analyses_0_Result"],
-		            state=state,
-		            date_sampled=date_sampled,
-		            date_created=date_created,
-		            date_received=date_received,
-		            date_captured=date_captured,
-		            creator=row[1]["Creator"],
-		            keyword=keyword
-		        )  
-		    else:                
-		        # say something about the error  
-		        pass
+				# need to get result in db thats verifed and change it to published if exists.
+
+				# fetch pesaved analysis if exists:
+				try:
+					presaved_analysis = Analyses.objects.get(
+						patient=patient,
+						sid=row[1]["getSampleID"],
+						pruid=row[1]["Patient_uid"]
+					)
+				except Exception:
+					presaved_analysis = None
+
+				if presaved_analysis != None:
+				# change state from verified to published
+					if presaved_analysis.state == VERIFIED and state == PUBLISHED:
+						presaved_analysis.state = state
+						presaved_analysis.save()
+					else:
+						pass
+				else:
+					Analyses.objects.get_or_create(
+						patient=patient,
+						sid=row[1]["getSampleID"],
+						pruid=row[1]["Patient_uid"],
+						result=row[1]["Analyses_0_Result"],
+						state=state,
+						date_sampled=date_sampled,
+						date_created=date_created,
+						date_received=date_received,
+						date_captured=date_captured,
+						creator=row[1]["Creator"],
+						keyword=keyword
+					)  
+			else:                
+				# say something about the patient not found error  
+				pass
 
 	if portal_type == "clients":
 		for row in csv.iterrows():
@@ -282,12 +314,13 @@ def update_analyses(login, portal_type):
 	sync_details = get_access_details(portal_type)
 	api_url = "http://" + login.station_api + sync_details.api_url
 	if sync_details.category == "All":
-		states = ["verified", "published"]
-		for state in states:
-			review_state = state
+		states = ["published", "verified"]
+		for review_state in states:
 			api_url += str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size)+ "&page_nr="
 			get_counts(portal_type, api_url, login, sync_details)
 			get_json_from_api(portal_type, api_url, login, sync_details)
+			if review_state == "published":
+				progress_analysis_reset()
 	else:
 		review_state = sync_details.category
 		api_url += str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size) + "&page_nr="
@@ -303,4 +336,4 @@ def sync_senaite_to_stanchion():
 	update_analyses(login, portal_type="analysis")
 
 	# For Future Updates
-	# ->> make celecry task for sync_senaite_to_stanchion()
+	# ->> make celery task for sync_senaite_to_stanchion()
