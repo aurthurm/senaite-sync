@@ -100,7 +100,7 @@ DATABASES = {
         'HOST': '',
         'PORT': '5432',
         'USER': 'bitnami',
-        'PASSWORD': '0afa07ff9d'
+        'PASSWORD': 'b2f8321d5a'
     }
 }
 
@@ -143,5 +143,7 @@ USE_TZ = True
 STATIC_URL = '/stanchion/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, '/public/static'),
+    # os.path.join(BASE_DIR, '/public/static'),
+    'C:/Users/administrator.MPILO/Bitnami Django Stack projects/stanchion/public/static',
+    'C:/Bitnami/djangostack-2.2.2-0/apps/django/Django-2.2.2-py3.7.egg/django/contrib/admin/static',
 )

@@ -312,18 +312,18 @@ def update_patients(login, portal_type):
 def update_analyses(login, portal_type):
 	print("Updating Analyses")
 	sync_details = get_access_details(portal_type)
-	api_url = "http://" + login.station_api + sync_details.api_url
+	init_api_url = "http://" + login.station_api + sync_details.api_url
 	if sync_details.category == "All":
 		states = ["published", "verified"]
 		for review_state in states:
-			api_url += str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size)+ "&page_nr="
+			api_url = init_api_url + str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size)+ "&page_nr="
 			get_counts(portal_type, api_url, login, sync_details)
 			get_json_from_api(portal_type, api_url, login, sync_details)
 			if review_state == "published":
 				progress_analysis_reset()
 	else:
 		review_state = sync_details.category
-		api_url += str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size) + "&page_nr="
+		api_url = init_api_url + str(review_state) + "&sort_order=descending&page_size=" + str(sync_details.page_size) + "&page_nr="
 		get_counts(portal_type, api_url, login, sync_details)
 		get_json_from_api(portal_type, api_url, login, sync_details)
 
@@ -331,9 +331,13 @@ def sync_senaite_to_stanchion():
 	#  Call me and ill do you the magic ::: sync_senaite_to_stanchion()
 	progress_reset()	
 	login = SyncLogin.objects.first()
-	update_clients(login, portal_type="clients")
-	update_patients(login, portal_type="patients")
-	update_analyses(login, portal_type="analysis")
+	selection = SyncSeletion.objects.first()
+	if selection.clients:
+		update_clients(login, portal_type="clients")
+	if selection.patients:
+		update_patients(login, portal_type="patients")
+	if selection.analyses:
+		update_analyses(login, portal_type="analysis")
 
 	# For Future Updates
 	# ->> make celery task for sync_senaite_to_stanchion()

@@ -56,3 +56,10 @@ class SyncProgress(models.Model):
 	analysis_total = models.PositiveIntegerField()
 	analysis_count = models.PositiveIntegerField()
 	analysis_synced = models.DateTimeField()
+
+class SyncSeletion(models.Model):
+	# What to sync
+	login = models.ForeignKey(SyncLogin, on_delete=models.PROTECT, related_name="sync_selection_login") # For AdminSite inlines to work
+	patients = models.BooleanField(default=False)
+	clients = models.BooleanField(default=False)
+	analyses = models.BooleanField(default=False)

@@ -7,6 +7,7 @@
 	<div class="page-spacer-p">
 		<div class="container">			
 			<div class="row">
+
 				<div class="col-12 d-flex justify-content-center">
 					<button id="syncButton" class="btn btn-md btn-outline-blue mr-5">SYNC SENAITE-DATA TO STANCHION</button>
 					<div class="preloader-wrapper">
@@ -54,6 +55,122 @@
 				<div class="col-12">
 					<p class="text-danger text-center mt-2"><b>DO NOT CLOSE THIS WINDOW WHILST SYNC IS IN PROGRESS</b></p>
 				</div>
+				<hr>
+				<div class="col-12 ">
+					<!-- Collapse buttons -->
+					<div>
+					  <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample"
+					    aria-expanded="false" aria-controls="collapseExample">
+					    SYNC SETTINGS
+					  </button>
+					</div>
+					<!-- / Collapse buttons -->
+					<!-- Collapsible element -->
+					<div class="collapse" id="collapseExample">
+					  <div class="mt-3">
+					    HERE YOU AN SUSTOMISE WHAT YOU WANT TO GET OUT OF SENAITE. JUSTSELECT THR COMPOM=NETS THAT YOU ARE INTERESTED IN AND YOU WILL GET ONLY JUST THAT
+					    <hr>
+					    <div  id="SyncSettings" class="row">
+					    	<div class="col-6">
+							    <div class="row">
+							    	<div class="col-3">
+							    		Clients:
+							    	</div>
+							    	<div class="col-9">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="clients" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+							    <div class="row">
+							    	<div class="col-3">
+							    		Patients:
+							    	</div>
+							    	<div class="col-9">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="patients" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+							    <div class="row">
+							    	<div class="col-3">
+							    		Analysis:
+							    	</div>
+							    	<div class="col-9">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="analyses" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+					    	</div>
+					    	<div id="analysesType" class="col-6 d-none">
+							    <div class="row">
+							    	<div class="col">
+							    		Verified:
+							    	</div>
+							    	<div class="col">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="verified" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+							    <div class="row">
+							    	<div class="col">
+							    		Published:
+							    	</div>
+							    	<div class="col">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="published" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+							    <div class="row">
+							    	<div class="col">
+							    		Verified and Published:
+							    	</div>
+							    	<div class="col">
+										<div class="switch">
+										  <label>
+										    Off
+										    <input id="verifiedPublished" type="checkbox">
+										    <span class="lever"></span> On
+										  </label>
+										</div>
+							    	</div>
+							    </div>
+					    	</div>
+					    </div>
+
+					    <div  id="SyncSettingsMessages" class="row"></div>
+					    <div class="row">
+					    	<button id="ApplySettings" class="btn btn-default ml-2">APPLY</button>
+					    </div>
+
+					  </div>
+					</div>
+					<!-- / Collapsible element -->
+				</div>
+
 			</div>
 		</div>
 	</div>
@@ -74,6 +191,64 @@ $(document).ready(function () {
 		$("#exception-errors").addClass("d-none").html("");
 		startSync()
 		getProgress()
+	});
+
+	$('.switch input[id="verifiedPublished"]').on('change', function() {
+		if ($('input#verifiedPublished').is(':checked') ) {
+			$('input#verified').prop("checked", false);
+			$('input#published').prop("checked", false);
+		} else {}
+	});
+
+	$('.switch input[id="verified"]').on('change', function() {
+		if ($('input#verified').is(':checked') ) {
+			$('input#verifiedPublished').prop("checked", false);
+			$('input#published').prop("checked", false);
+		} else {}
+	});
+
+	$('.switch input[id="published"]').on('change', function() {
+		if ($('input#published').is(':checked') ) {
+			$('input#verifiedPublished').prop("checked", false);
+			$('input#verified').prop("checked", false);
+		} else {}
+	});
+
+	$('.switch input[id="analyses"]').on('change', function() {
+		if ($('input#analyses').is(':checked') ) {
+			$('#analysesType').removeClass('d-none');
+		} else {
+			$('#analysesType').addClass('d-none');
+		}
+	});
+
+	getSelection();
+
+	$('button#ApplySettings').on('click', function(e){
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		var button = $(this);
+		button.addClass("disabled");
+		$('#SyncSettings').addClass("d-none");
+		$('#SyncSettingsMessages').html("Applying your Settings ... ... wait ... .... ").addClass("text-danger text-center");
+		var data = {};
+			data['clients'] = $('input#clients').is(':checked');
+			data['patients'] = $('input#patients').is(':checked');
+			data['analyses'] = $('input#analyses').is(':checked');
+			data['verified'] = $('input#verified').is(':checked');
+			data['published'] = $('input#published').is(':checked');
+			data['published_verified'] = $('input#verifiedPublished').is(':checked');
+		$.ajax({
+			"url": "{% url 'sync:selections' %}",
+			"method": "POST",
+			"data": data,
+			success: function(res){
+				button.removeClass("disabled");
+				$('#SyncSettingsMessages').html("");
+				$('#SyncSettingsMessages').html("Your settings were successfully applied.").addClass("text-success text-center");
+				$('#SyncSettings').removeClass("d-none");
+			}
+		})
 	});
 
 	function getProgress()
@@ -122,7 +297,47 @@ $(document).ready(function () {
 		})		
 	}
 
+	function getSelection()
+	{
+		$.ajax({
+			"url": "{% url 'sync:selections' %}",
+			"method": "GET",
+			"data": {},
+			success: function(res){
+				clients = $.parseJSON(res.clients);
+				patients = $.parseJSON(res.patients);
+				analyses = $.parseJSON(res.analyses);
+				verified = $.parseJSON(res.verified);
+				published = $.parseJSON(res.published);
+				published_verified = $.parseJSON(res.published_verified);
+				if (clients) { $("input#clients").prop("checked", true); } else {}
+				if (patients) { $("input#patients").prop("checked", true); } else {}
+				if (analyses) { 
+					$("input#analyses").prop("checked", true); 
+					$('#analysesType').removeClass('d-none'); 
+				} else {}
 
+				if (published_verified) { 
+					$("input#verifiedPublished").prop("checked", true); 
+					$("input#verified").prop("checked", false); 
+					$("input#published").prop("checked", false); 
+				} else {
+					if (verified) { 
+						$("input#verified").prop("checked", true); 
+						$("input#published").prop("checked", false); 
+						$("input#verifiedPublished").prop("checked", false); 
+					} else {						
+						if (published) {
+							$("input#published").prop("checked", true); 
+							$("input#verified").prop("checked", false); 
+							$("input#verifiedPublished").prop("checked", false);
+						} 
+					}					
+				}
+
+			}
+		})		
+	}
 
 });
 </script>

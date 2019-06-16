@@ -16,13 +16,18 @@ class SyncAnalysisInline(admin.TabularInline):
 class SyncProgressInline(admin.TabularInline):
     model = SyncProgress
     max_num = 1
+    
+class SyncSeletionInline(admin.TabularInline):
+    model = SyncSeletion
+    max_num = 1
 
 class SycnAdmin(admin.ModelAdmin):
     inlines = [
         SyncClientsInline,
         SyncPatientsInline,
         SyncAnalysisInline,
-        SyncProgressInline
+        SyncProgressInline,
+        SyncSeletionInline
     ]
 
     list_display = [

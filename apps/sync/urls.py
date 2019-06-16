@@ -4,5 +4,6 @@ from . import views
 app_name = "sync"
 urlpatterns = [
     path('senaite', views.SyncSenaiteView.as_view(), name='senaite'),
-    path('progress', views.SyncProgressView.as_view(), name='progress')
+    path('progress', views.SyncProgressView.as_view(), name='progress'),
+    path('selected', views.Selections.as_view(), name='selections'),
 ]
